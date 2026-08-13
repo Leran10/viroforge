@@ -2,7 +2,7 @@
 <style>
   @page {
     size: letter;
-    margin: 1in;
+    margin: 0;
   }
 
   :root {
@@ -375,14 +375,21 @@
   /* ── Print styles ── */
   @media print {
     .sidebar { display: none; }
-    .main { max-width: 100%; padding: 0; }
-    body { font-size: 11pt; }
-    h2 { break-before: page; }
+    .main { max-width: 100%; padding: 0.75in; }
+    body { font-size: 11pt; margin: 0; }
+    h2 { break-before: auto; }
     pre { break-inside: avoid; }
-    table { break-inside: avoid; }
     .callout { break-inside: avoid; }
     a { color: var(--text); }
     a[href]::after { content: none; }
+    .heatmap-interactive { display: none !important; }
+    .heatmap-print { display: block !important; }
+    .heatmap-print table { font-size: 9pt; border-collapse: collapse; width: 100%; break-inside: auto; }
+    .heatmap-print th, .heatmap-print td { border: 1px solid #ccc; padding: 3px 6px; text-align: center; }
+    .heatmap-print th { background: #f0f0f0; font-weight: 600; font-size: 8pt; }
+    .heatmap-print td:nth-child(2) { text-align: left; }
+    .heatmap-print .cell-hi { background: #c8e6c9; }
+    .heatmap-print .cell-med { background: #e8f5e9; }
   }
 
   /* ── Responsive ── */
@@ -524,6 +531,7 @@
 
   <p>Each collection has a body-site-specific contamination profile. The heatmap below shows the pre-VLP composition at the <em>realistic</em> contamination level. Use the buttons to see how prep-quality contaminants (host, rRNA, reagent, PhiX) scale at different levels, while microbial background (bacterial, fungal, archaeal) stays fixed.</p>
 
+  <div class="heatmap-interactive">
   <div style="margin-bottom:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
     <span style="font-size:13px; color:var(--text-sec); font-weight:500;">Contamination level:</span>
     <button id="hm-btn-clean" onclick="hmSetLevel('clean')" style="font:13px -apple-system,sans-serif; padding:3px 10px; border:1px solid var(--border-light); border-radius:4px; background:var(--code-bg); color:var(--text); cursor:pointer;">Clean (0.25x)</button>
@@ -541,6 +549,38 @@
     <span style="font-weight:600; color:#b85530;">Disease</span>
     <span style="font-weight:600; color:#7a4a8f;">RNA</span>
     <span style="margin-left:auto; font-size:11px;">Host/rRNA/reagent/PhiX scale by level; bacterial/fungal/archaeal do not.</span>
+  </div>
+  </div>
+
+  <div class="heatmap-print" style="display:none;">
+  <p style="font-size:11px; color:var(--text-ter); margin-bottom:8px;">Pre-VLP composition at realistic (1x) contamination level. All values are percentages of total reads.</p>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Collection</th><th>Viral</th><th>Bact.</th><th>Host</th><th>rRNA</th><th>Fungal</th><th>Arch.</th><th>Reagent</th><th>PhiX</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Gut (Western Diet)</td><td class="cell-hi">21.9</td><td>70.0</td><td>5.0</td><td>3.0</td><td>0.5</td><td>2.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>2</td><td>Oral (Saliva)</td><td class="cell-hi">19.9</td><td>65.0</td><td>10.0</td><td>4.0</td><td>1.0</td><td>0.5</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>3</td><td>Skin (Sebaceous)</td><td class="cell-hi">52.9</td><td>25.0</td><td>15.0</td><td>3.0</td><td>3.0</td><td>0.0</td><td>1.0</td><td>0.1</td></tr>
+      <tr><td>4</td><td>Respiratory (Nasopharynx)</td><td class="cell-hi">49.9</td><td>25.0</td><td>20.0</td><td>4.0</td><td>0.5</td><td>0.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>5</td><td>Marine (Coastal)</td><td class="cell-med">16.9</td><td>75.0</td><td>0.1</td><td>5.0</td><td>0.5</td><td>2.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>6</td><td>Soil (Agricultural)</td><td class="cell-med">8.4</td><td>80.0</td><td>0.1</td><td>4.0</td><td>5.0</td><td>2.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>7</td><td>Freshwater (Lake)</td><td class="cell-hi">23.4</td><td>70.0</td><td>0.1</td><td>5.0</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>8</td><td>Mouse Gut (C57BL/6)</td><td class="cell-hi">22.4</td><td>70.0</td><td>3.0</td><td>3.0</td><td>2.0</td><td>2.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>9</td><td>Wastewater (Urban)</td><td class="cell-med">10.9</td><td>75.0</td><td>1.0</td><td>8.0</td><td>2.0</td><td>3.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>10</td><td>IBD Gut</td><td class="cell-hi">18.4</td><td>70.0</td><td>5.0</td><td>3.0</td><td>2.0</td><td>1.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>11</td><td>HIV+ Gut</td><td class="cell-hi">16.4</td><td>70.0</td><td>5.0</td><td>3.0</td><td>3.0</td><td>2.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>12</td><td>CF Respiratory</td><td class="cell-med">12.4</td><td>55.0</td><td>25.0</td><td>5.0</td><td>2.0</td><td>0.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>13</td><td>Respiratory RNA</td><td class="cell-hi">74.4</td><td>0.0</td><td>15.0</td><td>10.0</td><td>0.0</td><td>0.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>14</td><td>Arbovirus (Mosquito)</td><td class="cell-hi">91.4</td><td>0.0</td><td>0.1</td><td>8.0</td><td>0.0</td><td>0.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>15</td><td>Fecal RNA</td><td class="cell-hi">82.4</td><td>0.0</td><td>5.0</td><td>12.0</td><td>0.0</td><td>0.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>16</td><td>Vaginal (Healthy)</td><td class="cell-med">13.4</td><td>60.0</td><td>20.0</td><td>3.0</td><td>3.0</td><td>0.0</td><td>0.5</td><td>0.1</td></tr>
+      <tr><td>17</td><td>Blood/Plasma</td><td class="cell-hi">57.3</td><td>1.0</td><td>40.0</td><td>0.5</td><td>0.1</td><td>0.0</td><td>1.0</td><td>0.1</td></tr>
+      <tr><td>18</td><td>Ocular Surface</td><td class="cell-hi">69.9</td><td>10.0</td><td>15.0</td><td>2.0</td><td>0.5</td><td>0.0</td><td>2.0</td><td>0.1</td></tr>
+      <tr><td>19</td><td>Lung (Lower Resp.)</td><td class="cell-hi">48.9</td><td>20.0</td><td>25.0</td><td>4.0</td><td>1.0</td><td>0.0</td><td>1.0</td><td>0.1</td></tr>
+      <tr><td>20</td><td>Urinary</td><td class="cell-hi">55.4</td><td>30.0</td><td>10.0</td><td>3.0</td><td>0.5</td><td>0.0</td><td>1.0</td><td>0.1</td></tr>
+    </tbody>
+  </table>
   </div>
 
   <script>
