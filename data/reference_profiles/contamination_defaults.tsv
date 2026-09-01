@@ -63,3 +63,7 @@ collection_id	host_organism	host_pct	rrna_pct	reagent_pct	phix_pct	bacterial_pct
 18	human	15.0	2.0	2.0	0.1	10.0	skin	0.5	0.0	ocular surface paucibacterial, kitome-dominated; ocular surface paucibacterial
 19	human	25.0	4.0	1.0	0.1	20.0	respiratory	1.0	0.0	lung BAL, host-rich low-biomass airway; lung low-biomass
 20	human	10.0	3.0	1.0	0.1	30.0	urinary	0.5	0.0	urinary, low-biomass, some kitome; urinary low-moderate biomass
+21	human	5.0	3.0	0.5	0.1	50.0	gut	2.0	1.0	infant gut, moderate host DNA; developing microbiome lower density than adult
+22	human	5.0	3.0	0.5	0.1	45.0	gut	1.0	0.5	NICU infant gut; hospital-acquired bacteria, lower total biomass
+23	human	20.0	4.0	0.5	0.1	25.0	respiratory	0.5	0.0	pediatric respiratory, epithelial cells; low-biomass airway
+24	human	20.0	3.0	0.5	0.1	65.0	vaginal	5.0	0.0	HPV-infected vaginal, dysbiotic; higher bacterial load, elevated Candida
