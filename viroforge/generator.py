@@ -661,14 +661,19 @@ class FASTQGenerator:
 
         return abundances
 
-    def _export_taxonomy(self, db_path: str, genome_ids: List[str]) -> Dict[str, Dict]:
+    def _export_taxonomy(self, db_path: str, genome_ids: List[str],
+                         provenance_map: Optional[Dict[str, str]] = None) -> Dict[str, Dict]:
         """Look up ICTV lineage + NCBI taxid for the given viral genomes.
 
         Returns {genome_id: {ncbi_taxid, realm, kingdom, phylum, class, order,
-        family, subfamily, genus, species, is_known}}. is_known is False when the
-        family is Unknown (no ICTV match), which the taxonomy benchmark uses to
-        stratify classifiable versus dark/novel content.
+        family, subfamily, genus, species, is_known, genome_provenance}}.
+        is_known is False when the family is Unknown (no ICTV match), which the
+        taxonomy benchmark uses to stratify classifiable versus dark/novel content.
+        genome_provenance enables stratification by biological origin (prophage,
+        provirus, endogenous, etc.).
         """
+        if provenance_map is None:
+            provenance_map = {}
         if not genome_ids:
             return {}
         out: Dict[str, Dict] = {}
@@ -692,6 +697,7 @@ class FASTQGenerator:
                     "class": cls, "order": order_name, "family": family,
                     "subfamily": subfamily, "genus": genus, "species": species,
                     "is_known": family not in (None, "", "Unknown"),
+                    "genome_provenance": provenance_map.get(gid, "isolate"),
                 }
         finally:
             conn.close()
@@ -1107,7 +1113,7 @@ class FASTQGenerator:
             # self-contained (no 500 MB database needed at benchmark time).
             if db_path:
                 viral_ids = [seq.id for i, seq in enumerate(sequences) if i < n_viral]
-                benchmarking['taxonomy'] = self._export_taxonomy(db_path, viral_ids)
+                benchmarking['taxonomy'] = self._export_taxonomy(db_path, viral_ids, provenance_map)
                 logger.info(f"  Taxonomy: exported for {len(benchmarking['taxonomy'])} viral genomes")
 
             # 3. Notes on additional benchmarking metadata (for future phases)
