@@ -925,7 +925,8 @@ class FASTQGenerator:
         amplification_stats: Optional[Dict] = None,
         contamination_profile: Optional[ContaminationProfile] = None,
         enable_benchmarking: bool = True,
-        db_path: Optional[str] = None
+        db_path: Optional[str] = None,
+        provenance_map: Optional[Dict[str, str]] = None
     ):
         """
         Export complete ground truth metadata including all sequences (viral + contaminants).
@@ -939,7 +940,10 @@ class FASTQGenerator:
             amplification_stats: Amplification bias statistics
             contamination_profile: ContaminationProfile object (for benchmarking metadata)
             enable_benchmarking: Enable benchmarking metadata export (default: True)
+            provenance_map: Genome ID to provenance type mapping
         """
+        if provenance_map is None:
+            provenance_map = {}
 
         # Validate that sequences and abundances match
         if len(sequences) != len(abundances):
@@ -987,7 +991,8 @@ class FASTQGenerator:
                 'genome_name': seq_name,
                 'sequence_type': seq_type,
                 'length': len(seq.seq),
-                'relative_abundance': abundance
+                'relative_abundance': abundance,
+                'genome_provenance': provenance_map.get(seq.id, 'isolate') if seq_type == 'viral' else None
             }
 
             # Add viral-specific taxonomy if available
@@ -1669,6 +1674,9 @@ def run_generation(args):
     else:
         logger.info("Dark matter disabled (--dark-matter-fraction 0.0)")
 
+    # Build genome provenance lookup (prophage, provirus, endogenous, etc.)
+    provenance_map = {g['genome_id']: g.get('genome_provenance', 'isolate') for g in genomes}
+
     # Create generator (sanitize collection name for file system)
     import re
     collection_name = collection_meta['collection_name']
@@ -1882,7 +1890,8 @@ def run_generation(args):
         amplification_stats,
         contamination_profile,
         args.enable_benchmarking,
-        db_path=args.database
+        db_path=args.database,
+        provenance_map=provenance_map
     )
 
     if args.dry_run:
@@ -2226,7 +2235,7 @@ def run_generation(args):
         # Post-process: add source type labels to read headers
         if contamination_profile is not None:
             genome_source_map = {}
-            # Viral genomes (check if dark matter)
+            # Viral genomes (check if dark matter and provenance)
             n_viral = enrichment_stats.get('n_viral_genomes', 0)
             # Build set of dark matter genome IDs for labeling
             dark_matter_ids = {g['genome_id'] for g in genomes if g.get('is_dark_matter')}
@@ -2234,7 +2243,11 @@ def run_generation(args):
                 if seq.id in dark_matter_ids:
                     genome_source_map[seq.id] = "dark_matter"
                 else:
-                    genome_source_map[seq.id] = "viral"
+                    provenance = provenance_map.get(seq.id, 'isolate')
+                    if provenance != 'isolate':
+                        genome_source_map[seq.id] = f"viral_{provenance}"
+                    else:
+                        genome_source_map[seq.id] = "viral"
             # Contaminant genomes
             for contaminant in contamination_profile.contaminants:
                 genome_source_map[contaminant.genome_id] = contaminant.contaminant_type.value
