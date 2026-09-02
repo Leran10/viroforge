@@ -1067,21 +1067,21 @@ function animateVLP(option, ctx, W, H, colors) {
       const ucTubeFrags = particles._ucTubeFrags;
       const tubeCX = (tubeL + tubeR) / 2;
 
-      // Timeline (~60fps, t increments by 16 per frame):
-      //   0-1800      (~30s)  mixed, gentle Brownian drift
-      //   1800-3600   (~30s)  spin ramps up, swirl becomes visible
-      //   3600-9000   (~90s)  full spin — swirling + sedimentation separates layers
-      //   9000-11000  (~33s)  spin winds down, particles settle to rest
-      //   11000-14000 (~50s)  labels visible, settled
-      //   14000-16000 (~33s)  needle enters from left, punctures at viral band
-      //   16000-19000 (~50s)  viral particles aspirated into needle
-      //   19000-21000 (~33s)  needle withdraws
-      //   21000-23000 (~33s)  vial fades in with collected fraction
-      //   23000+              nuclease treatment inside vial
-      const rampStart = 1800, fullSpinStart = 3600, spinEnd = 9000, settleEnd = 11000;
-      const needleStart = 14000, aspirateStart = 16000, aspirateEnd = 19000;
-      const withdrawStart = 19500, withdrawEnd = 21000;
-      const vialNuclStart = 23000;
+      // Timeline (~60fps, t increments by 16 per frame, 0.8× speed):
+      //   0-1440      (~24s)  mixed, gentle Brownian drift
+      //   1440-2880   (~24s)  spin ramps up, swirl becomes visible
+      //   2880-7200   (~72s)  full spin — swirling + sedimentation separates layers
+      //   7200-8800   (~27s)  spin winds down, particles settle to rest
+      //   8800-11200  (~40s)  labels visible, settled
+      //   11200-12800 (~27s)  needle enters from left, punctures at viral band
+      //   12800-15200 (~40s)  viral particles aspirated into needle
+      //   15200-16800 (~27s)  needle withdraws
+      //   16800-18400 (~27s)  vial fades in with collected fraction
+      //   18400+              nuclease treatment inside vial
+      const rampStart = 1440, fullSpinStart = 2880, spinEnd = 7200, settleEnd = 8800;
+      const needleStart = 11200, aspirateStart = 12800, aspirateEnd = 15200;
+      const withdrawStart = 15600, withdrawEnd = 16800;
+      const vialNuclStart = 18400;
 
       let spinSpeed = 0;
       if (t >= rampStart && t < fullSpinStart) {
