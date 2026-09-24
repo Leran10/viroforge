@@ -95,7 +95,7 @@ For more information: https://github.com/hecatomb/viroforge
     )
     generate_parser.add_argument(
         '--platform',
-        choices=['novaseq', 'miseq', 'hiseq', 'pacbio-hifi', 'nanopore'],
+        choices=['novaseq', 'miseq', 'hiseq', 'nanopore'],
         help='Sequencing platform'
     )
     generate_parser.add_argument(
