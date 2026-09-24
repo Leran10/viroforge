@@ -497,7 +497,7 @@ class VLPEnrichment:
             Tuple of (enriched_abundances, enrichment_stats)
 
         Note:
-            Long-read sequencing (PacBio HiFi, Nanopore) has reduced size bias
+            Long-read sequencing (Nanopore) has reduced size bias
             compared to short-read sequencing because:
             - Read lengths (10-30kb) span entire small viral genomes
             - Minimal fragmentation-related bias

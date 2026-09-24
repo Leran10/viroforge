@@ -383,7 +383,7 @@ def api_compare():
 
         # Check for hybrid assembly
         has_short = any(_get_platform(d) in ['novaseq', 'miseq', 'hiseq'] for d in datasets)
-        has_long = any(_get_platform(d) in ['pacbio-hifi', 'nanopore'] for d in datasets)
+        has_long = any(_get_platform(d) in ['nanopore'] for d in datasets)
 
         if has_short and has_long and len(collection_ids) == 1 and len(seeds) == 1:
             comparison_type = 'hybrid'
