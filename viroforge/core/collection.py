@@ -115,6 +115,10 @@ class CollectionLoader:
 
         collection_meta = dict(collection)
 
+        # Normalize legacy column name (old databases use default_host_dna_pct)
+        if 'default_host_dna_pct' in collection_meta and 'default_host_pct' not in collection_meta:
+            collection_meta['default_host_pct'] = collection_meta.pop('default_host_dna_pct')
+
         # Get genomes with abundances (include provenance if column exists)
         has_provenance = self._has_provenance_column(conn)
         provenance_col = "g.genome_provenance," if has_provenance else ""
