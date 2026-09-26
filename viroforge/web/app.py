@@ -202,7 +202,11 @@ def api_generation_status(generation_id):
 @app.route('/batch')
 def batch_page():
     """Batch generation page."""
-    return render_template('batch.html')
+    try:
+        collections = get_all_collections()
+    except Exception:
+        collections = []
+    return render_template('batch.html', collections=collections)
 
 
 @app.route('/api/batch/validate', methods=['POST'])
