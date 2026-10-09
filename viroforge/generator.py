@@ -24,6 +24,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
+from viroforge import __version__ as _viroforge_version
 from viroforge.enrichment.vlp import VLPEnrichment, VLPProtocol
 from viroforge.core.contamination import (
     BACTERIAL_COMMUNITY_PROFILES,
@@ -968,8 +969,16 @@ class FASTQGenerator:
             'metadata_version': '1.1' if enable_benchmarking else '1.0',
             'generation_info': {
                 'timestamp': datetime.now().isoformat(),
-                'viroforge_version': '0.13.0',
-                'random_seed': self.random_seed
+                'viroforge_version': _viroforge_version,
+                'random_seed': self.random_seed,
+                'output_files': {
+                    'ground_truth_fasta': f"fasta/{self.collection_name}.fasta",
+                    'fastq_r1': f"fastq/{self.collection_name}_R1.fastq",
+                    'fastq_r2': f"fastq/{self.collection_name}_R2.fastq",
+                    'metadata': f"metadata/{self.collection_name}_metadata.json",
+                    'abundances': f"metadata/{self.collection_name}_abundances.txt",
+                    'composition': f"metadata/{self.collection_name}_composition.tsv",
+                },
             },
             'collection': {
                 'id': collection_meta['collection_id'],
