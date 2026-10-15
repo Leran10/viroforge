@@ -103,6 +103,7 @@ class FASTQGenerator:
         use_real_references: bool = True,
         erv_kwargs: Optional[Dict] = None,
         collection_defaults: Optional[Dict] = None,
+        vlp_efficiency: str = 'standard',
     ) -> Tuple[List[SeqRecord], List[float], Dict, Optional[ContaminationProfile]]:
         """
         Prepare genome sequences with VLP enrichment and contamination.
@@ -294,6 +295,7 @@ class FASTQGenerator:
             use_real_references=use_real_references,
             erv_kwargs=erv_kwargs,
             collection_defaults=collection_defaults,
+            vlp_efficiency=vlp_efficiency,
         )
 
         return sequences, abundances, stats, contam_profile
@@ -309,6 +311,7 @@ class FASTQGenerator:
         use_real_references: bool = True,
         erv_kwargs: Optional[Dict] = None,
         collection_defaults: Optional[Dict] = None,
+        vlp_efficiency: str = 'standard',
     ) -> Tuple[List[SeqRecord], List[float], Dict, ContaminationProfile]:
         """
         Apply VLP enrichment protocol with size-based enrichment and contamination reduction.
@@ -325,14 +328,15 @@ class FASTQGenerator:
             Tuple of (combined_sequences, combined_abundances, enrichment_stats, contamination_profile)
         """
         # Map protocol name to VLPProtocol
+        eff = vlp_efficiency
         protocol_map = {
-            'tangential_flow': VLPProtocol.tangential_flow_standard(),
-            'tangential_flow_045': VLPProtocol.tangential_flow_045(),
-            'tangential_flow_01': VLPProtocol.tangential_flow_01(),
-            'syringe': VLPProtocol.syringe_filter_standard(),
-            'syringe_045': VLPProtocol.syringe_filter_045(),
-            'ultracentrifugation': VLPProtocol.ultracentrifugation(),
-            'norgen': VLPProtocol.norgen_kit()
+            'tangential_flow': VLPProtocol.tangential_flow_standard(efficiency=eff),
+            'tangential_flow_045': VLPProtocol.tangential_flow_045(efficiency=eff),
+            'tangential_flow_01': VLPProtocol.tangential_flow_01(efficiency=eff),
+            'syringe': VLPProtocol.syringe_filter_standard(efficiency=eff),
+            'syringe_045': VLPProtocol.syringe_filter_045(efficiency=eff),
+            'ultracentrifugation': VLPProtocol.ultracentrifugation(efficiency=eff),
+            'norgen': VLPProtocol.norgen_kit(efficiency=eff)
         }
 
         # Check for dynamically registered custom pore size configs
@@ -1298,6 +1302,15 @@ Examples:
     )
 
     parser.add_argument(
+        '--vlp-efficiency',
+        choices=['standard', 'high'],
+        default='standard',
+        help='VLP efficiency model (default: standard). '
+             'standard = ~80%% viral after VLP; '
+             'high = ~93%% viral after VLP (aggressive decontamination)'
+    )
+
+    parser.add_argument(
         '--contamination-level',
         choices=['clean', 'realistic', 'heavy'],
         default='realistic',
@@ -1872,6 +1885,7 @@ def run_generation(args):
     # Falls back to the global preset when the collection predates the defaults.
     collection_defaults = collection_meta if collection_meta.get('default_host_pct') is not None else None
 
+    vlp_efficiency = getattr(args, 'vlp_efficiency', 'standard')
     sequences, abundances, enrichment_stats, contamination_profile = generator.prepare_genomes(
         genomes,
         vlp_protocol=vlp_protocol,
@@ -1881,6 +1895,7 @@ def run_generation(args):
         use_real_references=use_real,
         erv_kwargs=erv_kwargs or None,
         collection_defaults=collection_defaults,
+        vlp_efficiency=vlp_efficiency,
     )
 
     # Apply amplification bias

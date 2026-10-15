@@ -137,6 +137,14 @@ For more information: https://github.com/hecatomb/viroforge
         help='Skip VLP enrichment (bulk metagenome)'
     )
     generate_parser.add_argument(
+        '--vlp-efficiency',
+        choices=['standard', 'high'],
+        default='standard',
+        help='VLP efficiency model (default: standard). '
+             'standard = ~80%% viral after VLP; '
+             'high = ~93%% viral after VLP (aggressive decontamination)'
+    )
+    generate_parser.add_argument(
         '--molecule-type',
         choices=['dna', 'rna'],
         help='Molecule type (default: dna)'

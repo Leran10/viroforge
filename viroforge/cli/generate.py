@@ -136,6 +136,8 @@ def generate_with_params(args):
         params['pore_size'] = args.pore_size
     if getattr(args, 'no_vlp', False):
         params['no_vlp'] = True
+    if getattr(args, 'vlp_efficiency', None):
+        params['vlp_efficiency'] = args.vlp_efficiency
 
     # Molecule type and RNA options
     if getattr(args, 'molecule_type', None):
