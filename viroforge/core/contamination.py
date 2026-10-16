@@ -536,8 +536,14 @@ def add_host_contamination(
                 else:
                     fragment_seq = record.seq
 
+            is_herv = record.id.startswith("herv_")
+            if is_herv:
+                gid = f"herv_{host_organism}_{i:04d}"
+            else:
+                gid = f"host_{host_organism}_{i:04d}"
+
             contaminant = ContaminantGenome(
-                genome_id=f"host_{host_organism}_{i:04d}",
+                genome_id=gid,
                 sequence=fragment_seq,
                 contaminant_type=ContaminantType.HOST_DNA,
                 organism=organism_info['organism'],

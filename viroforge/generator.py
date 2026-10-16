@@ -2163,7 +2163,10 @@ def run_generation(args):
                         genome_source_map[seq.id] = "viral"
             # Contaminant genomes
             for contaminant in contamination_profile.contaminants:
-                genome_source_map[contaminant.genome_id] = contaminant.contaminant_type.value
+                if contaminant.genome_id.startswith("herv_"):
+                    genome_source_map[contaminant.genome_id] = "host_dna_herv"
+                else:
+                    genome_source_map[contaminant.genome_id] = contaminant.contaminant_type.value
 
             logger.info("Labeling read headers with source types...")
             label_fastq_headers(r1_path, genome_source_map)
