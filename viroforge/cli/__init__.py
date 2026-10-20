@@ -191,6 +191,11 @@ For more information: https://github.com/hecatomb/viroforge
         action='store_true',
         help='Show detailed progress'
     )
+    generate_parser.add_argument(
+        '--no-report',
+        action='store_true',
+        help='Suppress the auto-generated HTML diagnostic report'
+    )
 
     # ========================================================================
     # REPORT command

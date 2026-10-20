@@ -108,7 +108,8 @@ def generate_with_preset(args):
     show_parameters(params)
 
     # Execute generation
-    return execute_generation(params, args.verbose)
+    return execute_generation(params, args.verbose,
+                              no_report=getattr(args, 'no_report', False))
 
 
 def generate_with_params(args):
@@ -172,7 +173,8 @@ def generate_with_params(args):
 
     show_parameters(params)
 
-    return execute_generation(params, args.verbose)
+    return execute_generation(params, args.verbose,
+                              no_report=getattr(args, 'no_report', False))
 
 
 def show_parameters(params: Dict):
@@ -188,7 +190,8 @@ def show_parameters(params: Dict):
     console.print()
 
 
-def execute_generation(params: Dict, verbose: bool = False):
+def execute_generation(params: Dict, verbose: bool = False,
+                       no_report: bool = False):
     """
     Execute dataset generation by calling run_generation() directly.
 
@@ -203,6 +206,8 @@ def execute_generation(params: Dict, verbose: bool = False):
         Generation parameters
     verbose : bool
         Show detailed progress
+    no_report : bool
+        Suppress the auto-generated HTML diagnostic report
 
     Returns
     -------
@@ -234,6 +239,10 @@ def execute_generation(params: Dict, verbose: bool = False):
             console.print("[bold green]✓ Dataset generated successfully![/bold green]")
             console.print()
             console.print(f"Output: {params.get('output', 'data/')}")
+
+            if not no_report:
+                _auto_generate_report(params.get('output', 'data/'))
+
             console.print()
             return 0
         else:
@@ -252,6 +261,18 @@ def execute_generation(params: Dict, verbose: bool = False):
             import traceback
             traceback.print_exc()
         return 1
+
+
+def _auto_generate_report(output_dir: str):
+    """Generate an HTML diagnostic report after successful generation."""
+    from pathlib import Path
+    try:
+        from .auto_report import generate_auto_report
+        report_path = generate_auto_report(Path(output_dir))
+        if report_path:
+            console.print(f"[bold cyan]Report:[/bold cyan] {report_path}")
+    except Exception as e:
+        console.print(f"[dim]Warning: could not generate HTML report: {e}[/dim]")
 
 
 def _params_to_namespace(params: Dict):
