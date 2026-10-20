@@ -177,6 +177,9 @@ def _render_html(
         composition, n_viral, n_contam, n_total, viral_frac, contam_frac
     )
 
+    rank_abundance_chart = _render_rank_abundance(composition)
+    size_abundance_chart = _render_size_vs_abundance(composition)
+    coverage_chart = _render_coverage_distribution(metadata)
     vlp_section = _render_vlp(enrichment, vlp_protocol)
     amp_section = _render_amplification(amplification)
     artifact_section = _render_artifacts(metadata)
@@ -266,6 +269,9 @@ code {{ background: #f0f0f0; padding: .15rem .35rem; border-radius: 3px;
 </div>
 
 {composition_section}
+{rank_abundance_chart}
+{size_abundance_chart}
+{coverage_chart}
 {vlp_section}
 {amp_section}
 {dark_matter_section}
@@ -346,6 +352,279 @@ def _render_composition(
   </div>
 </div>
 {top_html}"""
+
+
+def _render_rank_abundance(composition):
+    """Log-scale rank-abundance curve."""
+    if not composition or len(composition) < 2:
+        return ""
+    import math
+
+    sorted_comp = sorted(
+        composition, key=lambda g: g.get("relative_abundance", 0), reverse=True
+    )
+    abundances = [g.get("relative_abundance", 0) for g in sorted_comp if g.get("relative_abundance", 0) > 0]
+    if len(abundances) < 2:
+        return ""
+
+    chart_w, chart_h = 560, 220
+    pad_l, pad_r, pad_t, pad_b = 70, 20, 20, 40
+    plot_w = chart_w - pad_l - pad_r
+    plot_h = chart_h - pad_t - pad_b
+
+    log_min = math.floor(math.log10(min(abundances)))
+    log_max = math.ceil(math.log10(max(abundances)))
+    if log_max == log_min:
+        log_max = log_min + 1
+
+    def y_pos(val):
+        if val <= 0:
+            return pad_t + plot_h
+        lv = math.log10(val)
+        frac = (lv - log_min) / (log_max - log_min)
+        return pad_t + plot_h * (1 - frac)
+
+    def x_pos(rank):
+        return pad_l + (rank / max(len(abundances) - 1, 1)) * plot_w
+
+    # gridlines
+    grid = []
+    for exp in range(log_min, log_max + 1):
+        y = y_pos(10 ** exp)
+        grid.append(
+            f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w}" y2="{y:.1f}" '
+            f'stroke="var(--border)" stroke-width="0.5"/>'
+        )
+        grid.append(
+            f'<text x="{pad_l - 8}" y="{y + 4:.1f}" text-anchor="end" '
+            f'fill="var(--muted)" font-size="10">1e{exp}</text>'
+        )
+
+    # rank axis ticks
+    n = len(abundances)
+    tick_step = max(1, n // 5)
+    for i in range(0, n, tick_step):
+        x = x_pos(i)
+        grid.append(
+            f'<text x="{x:.1f}" y="{pad_t + plot_h + 16}" text-anchor="middle" '
+            f'fill="var(--muted)" font-size="10">{i + 1}</text>'
+        )
+
+    # polyline for the curve
+    points = " ".join(f"{x_pos(i):.1f},{y_pos(a):.1f}" for i, a in enumerate(abundances))
+
+    # dots colored by type
+    dots = []
+    for i, g in enumerate(sorted_comp):
+        a = g.get("relative_abundance", 0)
+        if a <= 0:
+            continue
+        stype = g.get("sequence_type", g.get("genome_type", "viral"))
+        color = "#00b894" if stype == "viral" else "#e17055"
+        cx, cy = x_pos(i), y_pos(a)
+        name = _ESC(str(g.get("genome_name", g.get("genome_id", "")))[:50])
+        dots.append(
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="3" fill="{color}" '
+            f'opacity="0.8"><title>#{i+1} {name} ({a:.4%})</title></circle>'
+        )
+
+    return f"""
+<div class="section">
+  <div class="section-header">Rank-Abundance Curve</div>
+  <div class="section-body" style="overflow-x:auto">
+    <svg viewBox="0 0 {chart_w} {chart_h}"
+         style="width:100%;max-width:{chart_w}px;height:auto"
+         xmlns="http://www.w3.org/2000/svg">
+      {chr(10).join(grid)}
+      <polyline points="{points}" fill="none" stroke="#6c5ce7"
+                stroke-width="2" stroke-linejoin="round"/>
+      {chr(10).join(dots)}
+      <text x="{pad_l + plot_w // 2}" y="{chart_h - 4}" text-anchor="middle"
+            fill="var(--muted)" font-size="11">Rank</text>
+      <text x="12" y="{pad_t + plot_h // 2}" text-anchor="middle"
+            fill="var(--muted)" font-size="11"
+            transform="rotate(-90, 12, {pad_t + plot_h // 2})">Relative Abundance</text>
+    </svg>
+    <p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">
+      {len(abundances)} genomes ranked by abundance (log scale).
+      <span class="badge badge-green">Viral</span>
+      <span class="badge badge-orange">Contaminant</span>
+    </p>
+  </div>
+</div>"""
+
+
+def _render_size_vs_abundance(composition):
+    """Scatter plot of genome length vs relative abundance."""
+    if not composition or len(composition) < 2:
+        return ""
+    import math
+
+    valid = [
+        g for g in composition
+        if g.get("relative_abundance", 0) > 0 and g.get("length", 0) > 0
+    ]
+    if len(valid) < 2:
+        return ""
+
+    chart_w, chart_h = 560, 260
+    pad_l, pad_r, pad_t, pad_b = 70, 20, 20, 50
+    plot_w = chart_w - pad_l - pad_r
+    plot_h = chart_h - pad_t - pad_b
+
+    lengths = [g["length"] for g in valid]
+    abundances = [g["relative_abundance"] for g in valid]
+
+    log_len_min = math.floor(math.log10(min(lengths)))
+    log_len_max = math.ceil(math.log10(max(lengths)))
+    log_ab_min = math.floor(math.log10(min(abundances)))
+    log_ab_max = math.ceil(math.log10(max(abundances)))
+    if log_len_max == log_len_min:
+        log_len_max += 1
+    if log_ab_max == log_ab_min:
+        log_ab_max += 1
+
+    def x_pos(length):
+        lv = math.log10(length)
+        return pad_l + (lv - log_len_min) / (log_len_max - log_len_min) * plot_w
+
+    def y_pos(abund):
+        lv = math.log10(abund)
+        return pad_t + plot_h * (1 - (lv - log_ab_min) / (log_ab_max - log_ab_min))
+
+    # gridlines
+    grid = []
+    for exp in range(log_ab_min, log_ab_max + 1):
+        y = y_pos(10 ** exp)
+        grid.append(
+            f'<line x1="{pad_l}" y1="{y:.1f}" x2="{pad_l + plot_w}" y2="{y:.1f}" '
+            f'stroke="var(--border)" stroke-width="0.5"/>'
+        )
+        grid.append(
+            f'<text x="{pad_l - 8}" y="{y + 4:.1f}" text-anchor="end" '
+            f'fill="var(--muted)" font-size="10">1e{exp}</text>'
+        )
+    for exp in range(log_len_min, log_len_max + 1):
+        x = x_pos(10 ** exp)
+        grid.append(
+            f'<line x1="{x:.1f}" y1="{pad_t}" x2="{x:.1f}" y2="{pad_t + plot_h}" '
+            f'stroke="var(--border)" stroke-width="0.5"/>'
+        )
+        label = f"{10**exp:,}" if exp < 6 else f"{10**exp/1e6:.0f}M"
+        grid.append(
+            f'<text x="{x:.1f}" y="{pad_t + plot_h + 16}" text-anchor="middle" '
+            f'fill="var(--muted)" font-size="10">{label} bp</text>'
+        )
+
+    # dots
+    dots = []
+    for g in valid:
+        stype = g.get("sequence_type", g.get("genome_type", "viral"))
+        color = "#00b894" if stype == "viral" else "#e17055"
+        cx, cy = x_pos(g["length"]), y_pos(g["relative_abundance"])
+        name = _ESC(str(g.get("genome_name", g.get("genome_id", "")))[:50])
+        dots.append(
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="4" fill="{color}" '
+            f'opacity="0.6"><title>{name} ({g["length"]:,} bp, '
+            f'{g["relative_abundance"]:.4%})</title></circle>'
+        )
+
+    return f"""
+<div class="section">
+  <div class="section-header">Genome Size vs Abundance</div>
+  <div class="section-body" style="overflow-x:auto">
+    <svg viewBox="0 0 {chart_w} {chart_h}"
+         style="width:100%;max-width:{chart_w}px;height:auto"
+         xmlns="http://www.w3.org/2000/svg">
+      {chr(10).join(grid)}
+      {chr(10).join(dots)}
+      <text x="{pad_l + plot_w // 2}" y="{chart_h - 4}" text-anchor="middle"
+            fill="var(--muted)" font-size="11">Genome Length</text>
+      <text x="12" y="{pad_t + plot_h // 2}" text-anchor="middle"
+            fill="var(--muted)" font-size="11"
+            transform="rotate(-90, 12, {pad_t + plot_h // 2})">Relative Abundance</text>
+    </svg>
+    <p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">
+      Log-log scale. Each dot is one genome.
+      <span class="badge badge-green">Viral</span>
+      <span class="badge badge-orange">Contaminant</span>
+    </p>
+  </div>
+</div>"""
+
+
+def _render_coverage_distribution(metadata):
+    """Bar chart of expected coverage categories."""
+    ec = metadata.get("benchmarking", {}).get("expected_coverage", {})
+    per_genome = ec.get("per_genome", []) if isinstance(ec, dict) else []
+    if not per_genome:
+        return ""
+
+    from collections import Counter
+    cats_order = ["complete", "high", "partial", "fragmented", "missing"]
+    cat_colors = {
+        "complete": "#00b894", "high": "#0984e3", "partial": "#fdcb6e",
+        "fragmented": "#e17055", "missing": "#d63031",
+    }
+    counts = Counter(g.get("coverage_category", "unknown") for g in per_genome)
+    total = sum(counts.values())
+    if total == 0:
+        return ""
+
+    chart_w, chart_h = 480, 160
+    pad_l, pad_r, pad_t, pad_b = 10, 10, 30, 40
+    plot_w = chart_w - pad_l - pad_r
+    plot_h = chart_h - pad_t - pad_b
+
+    bar_items = [(cat, counts.get(cat, 0)) for cat in cats_order if counts.get(cat, 0) > 0]
+    if not bar_items:
+        return ""
+    max_count = max(c for _, c in bar_items)
+    n_bars = len(bar_items)
+    bar_gap = 12
+    bar_w = min(60, (plot_w - bar_gap * (n_bars - 1)) / n_bars)
+    total_bar_w = n_bars * bar_w + (n_bars - 1) * bar_gap
+    start_x = pad_l + (plot_w - total_bar_w) / 2
+
+    bars = []
+    for i, (cat, cnt) in enumerate(bar_items):
+        x = start_x + i * (bar_w + bar_gap)
+        h = max(2, (cnt / max_count) * plot_h)
+        y = pad_t + plot_h - h
+        color = cat_colors.get(cat, "#b2bec3")
+        bars.append(
+            f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w:.1f}" height="{h:.1f}" '
+            f'fill="{color}" rx="3"/>'
+        )
+        bars.append(
+            f'<text x="{x + bar_w/2:.1f}" y="{y - 6:.1f}" text-anchor="middle" '
+            f'fill="var(--text)" font-size="12" font-weight="600">{cnt}</text>'
+        )
+        bars.append(
+            f'<text x="{x + bar_w/2:.1f}" y="{pad_t + plot_h + 18}" '
+            f'text-anchor="middle" fill="var(--muted)" font-size="10">'
+            f'{cat.title()}</text>'
+        )
+
+    pct_complete = counts.get("complete", 0) / total * 100
+
+    return f"""
+<div class="section">
+  <div class="section-header">Expected Genome Recovery</div>
+  <div class="section-body" style="overflow-x:auto">
+    <svg viewBox="0 0 {chart_w} {chart_h}"
+         style="width:100%;max-width:{chart_w}px;height:auto"
+         xmlns="http://www.w3.org/2000/svg">
+      <line x1="{pad_l}" y1="{pad_t + plot_h}" x2="{pad_l + plot_w}"
+            y2="{pad_t + plot_h}" stroke="var(--border)" stroke-width="1"/>
+      {chr(10).join(bars)}
+    </svg>
+    <p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">
+      Coverage categories from Lander-Waterman expected coverage.
+      {total} genomes total, {pct_complete:.0f}% at complete coverage.
+    </p>
+  </div>
+</div>"""
 
 
 def _render_vlp(enrichment, vlp_protocol):

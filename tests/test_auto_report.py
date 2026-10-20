@@ -108,16 +108,36 @@ def sample_dataset(tmp_path):
             "rate": 0.30,
             "duplicates_created": 4500,
         },
+        "benchmarking": {
+            "expected_coverage": {
+                "total_genome_length": 500000,
+                "per_genome": [
+                    {"genome_id": "GCF_001", "sequence_type": "viral",
+                     "length": 100000, "relative_abundance": 0.15,
+                     "expected_coverage": 1500.0, "coverage_category": "complete"},
+                    {"genome_id": "GCF_002", "sequence_type": "viral",
+                     "length": 5000, "relative_abundance": 0.08,
+                     "expected_coverage": 800.0, "coverage_category": "complete"},
+                    {"genome_id": "GCF_003", "sequence_type": "viral",
+                     "length": 45000, "relative_abundance": 0.05,
+                     "expected_coverage": 50.0, "coverage_category": "high"},
+                    {"genome_id": "GCF_004", "sequence_type": "viral",
+                     "length": 3000, "relative_abundance": 0.001,
+                     "expected_coverage": 0.5, "coverage_category": "fragmented"},
+                ],
+            },
+        },
     }
     (metadata_dir / "gut_10x_metadata.json").write_text(
         json.dumps(metadata, indent=2)
     )
 
     comp_lines = [
-        "genome_id\tgenome_name\tsequence_type\trelative_abundance\tgc_content",
-        "GCF_001\tCrAssphage\tviral\t0.15\t0.30",
-        "GCF_002\tBacteroides phage\tviral\t0.08\t0.42",
-        "GCF_003\tLactobacillus phage\tviral\t0.05\t0.38",
+        "genome_id\tgenome_name\tsequence_type\trelative_abundance\tlength",
+        "GCF_001\tCrAssphage\tviral\t0.15\t100000",
+        "GCF_002\tBacteroides phage\tviral\t0.08\t5000",
+        "GCF_003\tLactobacillus phage\tviral\t0.05\t45000",
+        "GCF_004\tSmall phage\tviral\t0.001\t3000",
     ]
     (metadata_dir / "gut_10x_composition.tsv").write_text("\n".join(comp_lines))
 
@@ -232,3 +252,29 @@ def test_report_contains_vlp_composition_chart(sample_dataset):
     assert "<svg" in html
     assert "Bacterial Background" in html
     assert "Host DNA" in html
+
+
+def test_report_contains_rank_abundance_chart(sample_dataset):
+    """Rank-abundance curve should appear when composition has multiple genomes."""
+    report = generate_auto_report(sample_dataset)
+    html = report.read_text()
+    assert "Rank-Abundance Curve" in html
+    assert "polyline" in html
+    assert "Rank" in html
+
+
+def test_report_contains_size_vs_abundance_chart(sample_dataset):
+    """Genome size vs abundance scatter should appear with length data."""
+    report = generate_auto_report(sample_dataset)
+    html = report.read_text()
+    assert "Genome Size vs Abundance" in html
+    assert "Genome Length" in html
+
+
+def test_report_contains_coverage_distribution(sample_dataset):
+    """Expected coverage bar chart should appear with benchmarking data."""
+    report = generate_auto_report(sample_dataset)
+    html = report.read_text()
+    assert "Expected Genome Recovery" in html
+    assert "Complete" in html
+    assert "Fragmented" in html
