@@ -364,13 +364,139 @@ def _render_vlp(enrichment, vlp_protocol):
         if rf is not None:
             rows.append((f"{_label(rtype)} Reduction", f"{rf*100:.1f}%"))
 
+    chart_html = _render_vlp_composition_chart(enrichment, reduction_by_type)
+
     return f"""
 <div class="section">
   <div class="section-header">VLP Enrichment</div>
   <div class="section-body">
+    {chart_html}
     <table class="kv">{_kv_rows(rows)}</table>
   </div>
 </div>"""
+
+
+_PARTICLE_COLORS = {
+    "viral": "#00b894",
+    "host_dna": "#e17055",
+    "rrna": "#fdcb6e",
+    "bacterial_background": "#6c5ce7",
+    "fungal_background": "#00cec9",
+    "archaeal_background": "#a29bfe",
+    "reagent_bacteria": "#fab1a0",
+    "phix": "#636e72",
+    "dietary_background": "#e84393",
+}
+
+
+def _render_vlp_composition_chart(enrichment, reduction_by_type):
+    if not reduction_by_type:
+        return ""
+
+    viral_frac = enrichment.get("viral_fraction")
+    contam_frac = enrichment.get("contamination_fraction")
+    orig_total_contam = enrichment.get("contamination_reduction", {}).get(
+        "original_total_contamination"
+    )
+    if viral_frac is None or orig_total_contam is None:
+        return ""
+
+    pre_viral = 1.0 - orig_total_contam
+    post_viral = viral_frac
+
+    pre_segments = [("viral", pre_viral)]
+    post_segments = [("viral", post_viral)]
+    for rtype, rdata in sorted(reduction_by_type.items()):
+        orig = rdata.get("original_abundance", 0)
+        reduced = rdata.get("reduced_abundance", 0)
+        if orig > 0:
+            pre_segments.append((rtype, orig))
+        if reduced > 0:
+            post_segments.append((rtype, reduced))
+
+    bar_w = 520
+    bar_h = 32
+    svg_h = 160
+    label_x = 130
+    bar_x = label_x + 10
+
+    def make_bar(segments, y):
+        rects = []
+        x = 0
+        for stype, frac in segments:
+            w = max(0, frac * bar_w)
+            if w < 0.5:
+                continue
+            color = _PARTICLE_COLORS.get(stype, "#b2bec3")
+            rects.append(
+                f'<rect x="{bar_x + x:.1f}" y="{y}" width="{w:.1f}" '
+                f'height="{bar_h}" fill="{color}" rx="2"/>'
+            )
+            if w > 28:
+                tx = bar_x + x + w / 2
+                rects.append(
+                    f'<text x="{tx:.1f}" y="{y + bar_h/2 + 4:.0f}" '
+                    f'text-anchor="middle" fill="#fff" font-size="11" '
+                    f'font-weight="600">{frac*100:.1f}%</text>'
+                )
+            x += w
+        return "\n    ".join(rects)
+
+    pre_rects = make_bar(pre_segments, 10)
+    post_rects = make_bar(post_segments, 56)
+
+    legend_items = []
+    seen = set()
+    for segments in (pre_segments, post_segments):
+        for stype, frac in segments:
+            if stype not in seen and frac > 0.001:
+                seen.add(stype)
+                color = _PARTICLE_COLORS.get(stype, "#b2bec3")
+                legend_items.append((stype, color))
+
+    max_legend_w = bar_x + bar_w
+    legend_parts = []
+    lx = bar_x
+    ly = 0
+    legend_row_h = 18
+    legend_rows = 1
+    for stype, color in legend_items:
+        label = _label(stype)
+        item_w = len(label) * 7 + 24
+        if lx + item_w > max_legend_w and lx > bar_x:
+            legend_rows += 1
+            lx = bar_x
+            ly += legend_row_h
+        legend_parts.append(
+            f'<rect x="{lx}" y="{ly}" width="10" height="10" '
+            f'fill="{color}" rx="2"/>'
+            f'<text x="{lx + 14}" y="{ly + 9}" fill="var(--text)" '
+            f'font-size="11">{_ESC(label)}</text>'
+        )
+        lx += item_w
+
+    legend_h = legend_rows * legend_row_h + 8
+    svg_h = 100 + legend_h
+    legend_y_offset = 100
+
+    return f"""
+    <div style="margin-bottom:1rem;overflow-x:auto">
+      <svg viewBox="0 0 {bar_x + bar_w + 20} {svg_h}"
+           style="width:100%;max-width:{bar_x + bar_w + 20}px;height:auto"
+           xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="32" fill="var(--muted)" font-size="13"
+              font-weight="600">Pre-VLP</text>
+        {pre_rects}
+        <text x="0" y="78" fill="var(--muted)" font-size="13"
+              font-weight="600">Post-VLP</text>
+        {post_rects}
+        <line x1="{bar_x}" y1="48" x2="{bar_x + bar_w}" y2="48"
+              stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3"/>
+        <g transform="translate(0,{legend_y_offset})">
+          {chr(10).join(legend_parts)}
+        </g>
+      </svg>
+    </div>"""
 
 
 def _render_amplification(amplification):

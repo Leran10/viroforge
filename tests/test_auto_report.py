@@ -59,9 +59,34 @@ def sample_dataset(tmp_path):
             "n_contaminants": 66,
             "viral_enrichment": {"mean_enrichment_factor": 4.2},
             "contamination_reduction": {
+                "original_total_contamination": 0.80,
+                "reduced_total_contamination": 0.18,
                 "reduction_by_type": {
-                    "host_dna": {"reduction_factor": 0.95},
-                    "reagent_bacteria": {"reduction_factor": 0.90},
+                    "host_dna": {
+                        "original_abundance": 0.05,
+                        "reduced_abundance": 0.002,
+                        "reduction_factor": 0.95,
+                    },
+                    "bacterial_background": {
+                        "original_abundance": 0.70,
+                        "reduced_abundance": 0.015,
+                        "reduction_factor": 0.98,
+                    },
+                    "reagent_bacteria": {
+                        "original_abundance": 0.005,
+                        "reduced_abundance": 0.0003,
+                        "reduction_factor": 0.90,
+                    },
+                    "rrna": {
+                        "original_abundance": 0.03,
+                        "reduced_abundance": 0.003,
+                        "reduction_factor": 0.90,
+                    },
+                    "phix": {
+                        "original_abundance": 0.001,
+                        "reduced_abundance": 0.0006,
+                        "reduction_factor": 0.36,
+                    },
                 }
             },
         },
@@ -196,3 +221,14 @@ def test_report_html_escapes_special_chars(tmp_path):
     html = report.read_text()
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
+
+
+def test_report_contains_vlp_composition_chart(sample_dataset):
+    """Pre/post VLP composition chart should be present with SVG bars."""
+    report = generate_auto_report(sample_dataset)
+    html = report.read_text()
+    assert "Pre-VLP" in html
+    assert "Post-VLP" in html
+    assert "<svg" in html
+    assert "Bacterial Background" in html
+    assert "Host DNA" in html
