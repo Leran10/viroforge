@@ -113,6 +113,16 @@ viroforge generate \
     --vlp-protocol tangential_flow
 ```
 
+An HTML diagnostic report is automatically generated at
+`data/gut/gut_report.html` with rank-abundance curves, genome size vs
+abundance plots, expected coverage distributions, and pre/post VLP
+composition charts. Suppress with `--no-report`. Regenerate for any
+existing dataset with:
+
+```bash
+viroforge report data/gut --format html
+```
+
 ### Generate an RNA virome dataset
 
 ```bash
@@ -197,10 +207,30 @@ See `docs/PHASE13B_QC_BENCHMARK.md`, `docs/PHASE13B_ASSEMBLY_BENCHMARK.md`, and
 
 ### Web interface
 
+ViroForge includes a browser-based UI for browsing collections and generating
+datasets without touching the command line.
+
 ```bash
+# Install with web dependencies (Flask)
+pip install -e ".[web]"
+
+# Build the genome database (one-time, ~500 MB)
+viroforge setup-db
+
+# Launch the web interface
 viroforge web
 # Opens at http://127.0.0.1:5000
 ```
+
+The interface provides:
+- **Collections** — browse all 23 collections with genome counts and descriptions
+- **Generate** — pick a preset or configure collection, platform, coverage, VLP
+  protocol, amplification, and contamination level; generation runs in the
+  background and an HTML diagnostic report is available when it finishes
+- **Batch** — paste a YAML config to validate and launch batch runs
+- **Reports** — load a summary for any dataset path, or generate and view the
+  full HTML report in-browser
+- **Compare** — compare multiple datasets side by side
 
 ## Presets
 
