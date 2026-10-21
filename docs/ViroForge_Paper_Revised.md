@@ -109,7 +109,7 @@ ViroForge includes a three-module benchmarking framework accessible via `virofor
 
 ### 2.7 Implementation
 
-ViroForge is implemented in Python (≥3.8) with ~21,000 lines of application code across 51 modules, ~23,000 lines of curation and utility scripts (62 scripts), and 431 test functions spanning ~8,200 lines of test code. The CLI provides ten subcommands: `browse`, `generate`, `batch`, `report`, `compare`, `presets`, `web`, `setup-db`, `summary`, and `benchmark`. All random operations use seeded RNG instances for full reproducibility.
+ViroForge is implemented in Python (≥3.8) with ~21,000 lines of application code across 51 modules, ~23,000 lines of curation and utility scripts (62 scripts), and 431 test functions spanning ~8,200 lines of test code. The CLI provides ten subcommands: `browse`, `generate`, `batch`, `report`, `compare`, `presets`, `web`, `setup-db`, `summary`, and `benchmark`. All random operations use seeded RNG instances for full reproducibility. Each `generate` run automatically produces a self-contained HTML diagnostic report including rank-abundance curves, genome size versus abundance scatter plots, expected coverage distributions, and pre/post VLP composition charts, enabling users to visually verify dataset properties before downstream analysis. Reports can also be regenerated for existing datasets via `viroforge report --format html`.
 
 ---
 
