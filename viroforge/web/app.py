@@ -140,6 +140,12 @@ def api_generate():
             cmd.append('--no-vlp')
         if data.get('contamination_level'):
             cmd.extend(['--contamination-level', data['contamination_level']])
+        if data.get('read_length'):
+            cmd.extend(['--read-length', str(data['read_length'])])
+        if data.get('insert_size'):
+            cmd.extend(['--insert-size', str(data['insert_size'])])
+        if data.get('amplification'):
+            cmd.extend(['--amplification', data['amplification']])
 
         # Start generation in background
         process = subprocess.Popen(
@@ -154,7 +160,8 @@ def api_generate():
         running_generations[generation_id] = {
             'process': process,
             'command': ' '.join(cmd),
-            'status': 'running'
+            'status': 'running',
+            'output_dir': data.get('output', ''),
         }
 
         return jsonify({
@@ -190,13 +197,47 @@ def api_generation_status(generation_id):
         status = 'success' if return_code == 0 else 'failed'
         gen['status'] = status
 
+        report_url = None
+        if status == 'success' and gen.get('output_dir'):
+            output_path = Path(gen['output_dir'])
+            report_file = output_path / f"{output_path.name}_report.html"
+            if report_file.is_file():
+                report_url = f"/report-file/{output_path.name}"
+                gen['report_path'] = str(report_file)
+
         return jsonify({
             'status': status,
             'return_code': return_code,
+            'report_url': report_url,
             'stdout': stdout,
             'stderr': stderr,
             'command': gen['command']
         })
+
+
+@app.route('/report-file/<dataset_name>')
+def serve_report(dataset_name):
+    """Serve an auto-generated HTML report for a dataset."""
+    for gen in running_generations.values():
+        if gen.get('report_path') and Path(gen['report_path']).name.startswith(dataset_name):
+            return send_file(gen['report_path'], mimetype='text/html')
+    return jsonify({'error': 'Report not found'}), 404
+
+
+@app.route('/api/report/generate', methods=['POST'])
+def api_generate_report():
+    """API: Generate HTML report for an existing dataset."""
+    try:
+        dataset_path = Path(request.get_json().get('dataset_path', '')).resolve()
+        if not dataset_path.is_dir():
+            return jsonify({'error': 'Dataset directory not found'}), 404
+        from viroforge.cli.auto_report import generate_auto_report
+        report_path = generate_auto_report(dataset_path)
+        if report_path is None:
+            return jsonify({'error': 'No metadata found in dataset'}), 404
+        return send_file(str(report_path.resolve()), mimetype='text/html')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/batch')

@@ -104,6 +104,38 @@
                                 </select>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Read Length</label>
+                                    <input type="number" class="form-control" id="readLength" placeholder="150">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Insert Size</label>
+                                    <input type="number" class="form-control" id="insertSize" placeholder="350">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Amplification</label>
+                                    <select class="form-select" id="amplification">
+                                        <option value="">None</option>
+                                        <option value="mda">MDA</option>
+                                        <option value="linker">Linker Amplification</option>
+                                        <option value="rdab">RdAB (Random Priming PCR)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Contamination Level</label>
+                                    <select class="form-select" id="contaminationLevel">
+                                        <option value="realistic">Realistic</option>
+                                        <option value="none">None</option>
+                                        <option value="minimal">Minimal</option>
+                                        <option value="heavy">Heavy</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Random Seed</label>
                                 <input type="number" class="form-control" id="customSeed" placeholder="42">
@@ -238,6 +270,18 @@ function startGeneration() {
         if (document.getElementById('vlpProtocol').value) {
             requestData.vlp_protocol = document.getElementById('vlpProtocol').value;
         }
+        if (document.getElementById('readLength').value) {
+            requestData.read_length = parseInt(document.getElementById('readLength').value);
+        }
+        if (document.getElementById('insertSize').value) {
+            requestData.insert_size = parseInt(document.getElementById('insertSize').value);
+        }
+        if (document.getElementById('amplification').value) {
+            requestData.amplification = document.getElementById('amplification').value;
+        }
+        if (document.getElementById('contaminationLevel').value) {
+            requestData.contamination_level = document.getElementById('contaminationLevel').value;
+        }
         if (document.getElementById('customSeed').value) {
             requestData.seed = parseInt(document.getElementById('customSeed').value);
         }
@@ -277,8 +321,13 @@ function checkStatus() {
 
                 if (data.status === 'success') {
                     document.getElementById('resultHeader').className = 'card-header bg-success text-white';
+                    let reportLink = '';
+                    if (data.report_url) {
+                        reportLink = `<p><a href="${data.report_url}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-bar-graph"></i> View HTML Report</a></p>`;
+                    }
                     document.getElementById('resultBody').innerHTML = `
                         <p><i class="bi bi-check-circle-fill"></i> Dataset generated successfully!</p>
+                        ${reportLink}
                         <p class="mb-0"><strong>Command:</strong><br><pre>${data.command}</pre></p>
                     `;
                 } else {
