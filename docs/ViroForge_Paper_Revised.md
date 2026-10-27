@@ -77,9 +77,9 @@ Two optional retroviral modules are available: endogenous HERV injection using 5
 
 > **Fig. 2.** ViroForge data generation pipeline. Genomes from a curated collection pass through VLP enrichment, amplification, and contamination stages that introduce virome-specific biases. Real reference sequences are used for all contaminant types. Every output read carries a source label enabling exact ground-truth evaluation by the integrated benchmarking framework.
 
-![Fig. 3](fig2_composite_v4.png)
+![Fig. 3](fig2_composite_v5.png)
 
-> **Fig. 3.** ViroForge bias models and validation (2×2 composite). **(A)** VLP enrichment recovery probability as a function of virion diameter for seven protocols. Sigmoid curves at 0.1, 0.2, and 0.45 μm model size-dependent passage through membrane pores; ultracentrifugation (dashed) retains all sizes equally; column-based extraction favors larger particles. **(B)** VLP enrichment validation: ViroForge-simulated gut virome composition (bulk vs. VLP-enriched) compared with published data—bulk viral fraction from whole-metagenome read recruitment (8.6%; Nayfach et al., 2021) and VLP enrichment efficiencies from CsCl (Thurber et al., 2009) and TFF (Conceicao-Neto et al., 2015) protocols. **(C)** Amplification GC bias: relative efficiency as a function of genome GC content for MDA (phi29; strength 3.0), RdAB (strength 1.0), and Linker (strength 0.5). Note that MDA and RdAB curves largely overlap at their default parameters (e.g., relative efficiency 0.37 vs. 0.37 at 35% GC), reflecting the similar bias profiles of phi29- and random-priming-based amplification; the two are distinguished primarily by RdAB's additional length-dependent bias (not shown). **(D)** GC bias validation: per-read GC content density distributions from unamplified, MDA-amplified (n=6), and SISPA-amplified (n=2) human saliva viromes (Parras-Moltó et al., 2018; PRJNA413824), demonstrating amplification-induced GC range narrowing.
+> **Fig. 3.** ViroForge bias models and validation (2×2 composite). **(A)** VLP enrichment recovery probability as a function of virion diameter for seven protocols. Sigmoid curves at 0.1, 0.2, and 0.45 μm model size-dependent passage through membrane pores; ultracentrifugation (dashed) retains all sizes equally; column-based extraction favors larger particles. **(B)** VLP enrichment validation: ViroForge-simulated gut virome composition (bulk vs. VLP-enriched) compared with published experimental data from stool viromes (Duan et al., 2026). Published values are viral-contig-mapping read fractions (means of triplicates): bulk metagenome 2.37%, 0.22 μm filtration (VP1) 73.0%, and 0.45 μm filtration (VP3) 62.9%. ViroForge's TFF 0.2 μm model produces 79.8% viral reads, within the range of published 0.2–0.45 μm filtration-based VLP protocols. **(C)** Amplification GC bias: relative efficiency as a function of genome GC content for MDA (phi29; strength 3.0), RdAB (strength 1.0), and Linker (strength 0.5). Note that MDA and RdAB curves largely overlap at their default parameters (e.g., relative efficiency 0.37 vs. 0.37 at 35% GC), reflecting the similar bias profiles of phi29- and random-priming-based amplification; the two are distinguished primarily by RdAB's additional length-dependent bias (not shown). **(D)** GC bias validation: per-read GC content density distributions from unamplified, MDA-amplified (n=6), and SISPA-amplified (n=2) human saliva viromes (Parras-Moltó et al., 2018; PRJNA413824), demonstrating amplification-induced GC range narrowing.
 
 ### 2.4 Per-read ground truth
 
@@ -121,7 +121,7 @@ In addition to the command-line interface, ViroForge provides a browser-based we
 
 ### 3.1 Contamination profile validation
 
-Without VLP enrichment (`--no-vlp`), the gut virome dataset (Collection 1) produced 71.8% bacterial, 4.1% viral, 2.5% fungal+archaeal, and 5.0% host DNA reads, consistent with the 8.6% viral read fraction reported in bulk whole-metagenome surveys (Nayfach et al., 2021). With VLP enrichment using tangential flow filtration (0.2 μm), bacterial background was reduced by ≥98%, producing ≥80% viral reads, matching published VLP prep efficiency (Thurber et al., 2009). Blood/plasma virome (Collection 17) produced 40% host DNA reflecting cell-free DNA dominance, with only 1% bacterial background. CF respiratory virome (Collection 12) produced 25% host DNA and 55% bacterial background reflecting neutrophil DNA and chronic infection. Environmental collections (marine, soil, freshwater) have near-zero host DNA (0.05%) but high bacterial background (70–80%), with soil carrying the highest fungal fraction (5%) and archaeal fraction (2%) (Fig. 1).
+Without VLP enrichment (`--no-vlp`), the gut virome dataset (Collection 1) produced 71.8% bacterial, 4.1% viral, 2.5% fungal+archaeal, and 5.0% host DNA reads, consistent with the 2.37% viral read fraction measured in bulk stool metagenomes (Duan et al., 2026). With VLP enrichment using tangential flow filtration (0.2 μm), bacterial background was reduced by ≥98%, producing ≥80% viral reads, within the range of published VLP filtration protocols (62.9–73.0% viral; Duan et al., 2026). Blood/plasma virome (Collection 17) produced 40% host DNA reflecting cell-free DNA dominance, with only 1% bacterial background. CF respiratory virome (Collection 12) produced 25% host DNA and 55% bacterial background reflecting neutrophil DNA and chronic infection. Environmental collections (marine, soil, freshwater) have near-zero host DNA (0.05%) but high bacterial background (70–80%), with soil carrying the highest fungal fraction (5%) and archaeal fraction (2%) (Fig. 1).
 
 ### 3.2 GC bias modeling
 
@@ -129,7 +129,7 @@ MDA-amplified datasets showed preferential amplification of genomes near 50% GC 
 
 ### 3.3 VLP enrichment modeling
 
-Filtration-based protocols at 0.2 μm yield sigmoid retention curves centered at 200 nm (Fig. 3A) with protocol-specific steepness (TFF: *k*=0.008; syringe: *k*=0.010). At 0.45 μm, the transition shifts to 450 nm, retaining most tailed phages (60–200 nm) with reduced steepness (TFF 0.45: *k*=0.006; syringe 0.45: *k*=0.008). TFF at 0.1 μm (*k*=0.012) provides the tightest filtration, achieving the highest contamination reduction (0.85 standard / 0.92 high) but lower recovery (0.75) as larger viruses may be excluded. Ultracentrifugation retains all sizes equally (recovery 0.90) but achieves lower contamination reduction (0.62 standard / 0.68 high). Two efficiency levels ('standard' and 'high') model the range from typical VLP preparations to optimized protocols (Table S2). These profiles match qualitative observations from VLP comparison studies (Thurber et al., 2009; Conceicao-Neto et al., 2015), as shown in Fig. 3B.
+Filtration-based protocols at 0.2 μm yield sigmoid retention curves centered at 200 nm (Fig. 3A) with protocol-specific steepness (TFF: *k*=0.008; syringe: *k*=0.010). At 0.45 μm, the transition shifts to 450 nm, retaining most tailed phages (60–200 nm) with reduced steepness (TFF 0.45: *k*=0.006; syringe 0.45: *k*=0.008). TFF at 0.1 μm (*k*=0.012) provides the tightest filtration, achieving the highest contamination reduction (0.85 standard / 0.92 high) but lower recovery (0.75) as larger viruses may be excluded. Ultracentrifugation retains all sizes equally (recovery 0.90) but achieves lower contamination reduction (0.62 standard / 0.68 high). Two efficiency levels ('standard' and 'high') model the range from typical VLP preparations to optimized protocols (Table S2). These profiles match published VLP enrichment results from stool viromes: 0.22 μm filtration yields 73.0% and 0.45 μm filtration yields 62.9% viral reads (Duan et al., 2026), compared with ViroForge's 79.8% for TFF 0.2 μm (Fig. 3B).
 
 ### 3.4 Benchmarking framework validation
 
@@ -341,10 +341,10 @@ Conflict of Interest: none declared.
 
 1. Brum,J.R. et al. (2015) Patterns and ecological drivers of ocean viral communities. Science, 348, 1261498. doi:10.1126/science.1261498
 2. Clokie,M.R.J. et al. (2011) Phages in nature. Bacteriophage, 1, 31–45. doi:10.4161/bact.1.1.14942
-3. Conceicao-Neto,N. et al. (2015) Modular approach to customise sample preparation procedures for viral metagenomics. Scientific Reports, 5, 16532. doi:10.1038/srep16532
-4. Crits-Christoph,A. et al. (2021) Genome sequencing of sewage detects regionally prevalent SARS-CoV-2 variants. mBio, 12, e02703-20. doi:10.1128/mBio.02703-20
-5. Cui,J. et al. (2014) An allometric relationship between the genome length and virion volume of viruses. Journal of Virology, 88, 6403–6410. doi:10.1128/JVI.00362-14
-6. Doan,T. et al. (2016) Paucibacterial microbiome and resident DNA virome of the healthy conjunctiva. Investigative Ophthalmology & Visual Science, 57, 5116–5126. doi:10.1167/iovs.16-19803
+3. Crits-Christoph,A. et al. (2021) Genome sequencing of sewage detects regionally prevalent SARS-CoV-2 variants. mBio, 12, e02703-20. doi:10.1128/mBio.02703-20
+4. Cui,J. et al. (2014) An allometric relationship between the genome length and virion volume of viruses. Journal of Virology, 88, 6403–6410. doi:10.1128/JVI.00362-14
+5. Doan,T. et al. (2016) Paucibacterial microbiome and resident DNA virome of the healthy conjunctiva. Investigative Ophthalmology & Visual Science, 57, 5116–5126. doi:10.1167/iovs.16-19803
+6. Duan,Y. et al. (2026) Optimizing methods for virome analysis based on studies of a synthetic viral community. mSystems, 11, e00188-26. doi:10.1128/msystems.00188-26
 7. Fritz,A. et al. (2019) CAMISIM: simulating metagenomes and microbial communities. Microbiome, 7, 17. doi:10.1186/s40168-019-0633-6
 8. Gardy,J.L. and Loman,N.J. (2018) Towards a genomics-informed, real-time, global pathogen surveillance system. Nature Reviews Genetics, 19, 9–20. doi:10.1038/nrg.2017.88
 9. Garmaeva,S. et al. (2019) Studying the gut virome in the metagenomic era: challenges and perspectives. Gastroenterology, 156, 1451–1461. doi:10.1053/j.gastro.2018.12.033
@@ -358,25 +358,24 @@ Conflict of Interest: none declared.
 17. Lim,Y.W. et al. (2013) Metagenomics and metatranscriptomics: windows on CF-associated viral and microbial communities. Journal of Cystic Fibrosis, 12, 154–164. doi:10.1016/j.jcf.2012.07.009
 18. Monaco,C.L. et al. (2016) Altered virome and bacterial microbiome in human immunodeficiency virus-associated acquired immunodeficiency syndrome. Cell Host & Microbe, 19, 311–322. doi:10.1016/j.chom.2016.02.011
 19. Moustafa,A. et al. (2017) The blood DNA virome in 8,000 humans. PLoS Pathogens, 13, e1006292. doi:10.1371/journal.ppat.1006292
-20. Nayfach,S. et al. (2021) Metagenomic compendium of 189,680 DNA viruses from the human gut microbiome. Nature Microbiology, 6, 960–970. doi:10.1038/s41564-021-00928-6
-21. Norman,J.M. et al. (2015) Disease-specific alterations in the enteric virome in inflammatory bowel disease. Cell, 160, 447–460. doi:10.1016/j.cell.2015.01.002
-22. Okazaki,Y. et al. (2019) Genome-resolved viral and cellular metagenomes revealed potential key virus-host interactions in a deep freshwater lake. Environmental Microbiology, 21, 4740–4754. doi:10.1111/1462-2920.14816
-23. Ono,Y. et al. (2022) PBSIM3: a simulator for all types of PacBio and ONT long reads. NAR Genomics and Bioinformatics, 4, lqac092. doi:10.1093/nargab/lqac092
-24. Paez-Espino,D. et al. (2016) Uncovering Earth's virome. Nature, 536, 425–430. doi:10.1038/nature19094
-25. Parras-Moltó,M. et al. (2018) Evaluation of bias induced by viral enrichment and random amplification protocols in metagenomic surveys of saliva DNA viruses. Microbiome, 6, 119. doi:10.1186/s40168-018-0507-3
-26. Pinard,R. et al. (2006) Assessment of whole genome amplification-induced bias through high-throughput, massively parallel whole genome sequencing. BMC Genomics, 7, 216. doi:10.1186/1471-2164-7-216
-27. Pride,D.T. et al. (2012) Evidence of a robust resident bacteriophage population revealed through analysis of the human salivary virome. The ISME Journal, 6, 915–926. doi:10.1038/ismej.2011.169
-28. Salter,S.J. et al. (2014) Reagent and laboratory contamination can critically impact sequence-based microbiome analyses. BMC Biology, 12, 87. doi:10.1186/s12915-014-0087-z
-29. Santiago-Rodriguez,T.M. et al. (2015) The human urine virome in association with urinary tract infections. Frontiers in Microbiology, 6, 14. doi:10.3389/fmicb.2015.00014
-30. Sczyrba,A. et al. (2017) Critical Assessment of Metagenome Interpretation—a benchmark of computational metagenomics software. Nature Methods, 14, 1063–1071. doi:10.1038/nmeth.4458
-31. Sender,R. et al. (2016) Revised estimates for the number of human and bacteria cells in the body. PLoS Biology, 14, e1002533. doi:10.1371/journal.pbio.1002533
-32. Shkoporov,A.N. et al. (2019) The human gut virome is highly diverse, stable, and individual specific. Cell Host & Microbe, 26, 527–541. doi:10.1016/j.chom.2019.09.009
-33. Thurber,R.V. et al. (2009) Laboratory procedures to generate viral metagenomes. Nature Protocols, 4, 470–483. doi:10.1038/nprot.2009.10
-34. Trubl,G. et al. (2018) Soil viruses are underexplored players in ecosystem carbon processing. mSystems, 3, e00076-18. doi:10.1128/mSystems.00076-18
-35. Wylie,K.M. et al. (2014) Metagenomic analysis of double-stranded DNA viruses in healthy adults. BMC Biology, 12, 71. doi:10.1186/s12915-014-0071-7
-36. Yilmaz,S. et al. (2010) Multiple displacement amplification compromises quantitative analysis of metagenomes. Nature Methods, 7, 943–944. doi:10.1038/nmeth1210-943
-37. Zhang,T. et al. (2006) RNA viral community in human feces: prevalence of plant pathogenic viruses. PLoS Biology, 4, e3. doi:10.1371/journal.pbio.0040003
-38. Zolfo,M. et al. (2019) Detecting contamination in viromes using ViromeQC. Nature Biotechnology, 37, 1408–1412. doi:10.1038/s41587-019-0334-5
+20. Norman,J.M. et al. (2015) Disease-specific alterations in the enteric virome in inflammatory bowel disease. Cell, 160, 447–460. doi:10.1016/j.cell.2015.01.002
+21. Okazaki,Y. et al. (2019) Genome-resolved viral and cellular metagenomes revealed potential key virus-host interactions in a deep freshwater lake. Environmental Microbiology, 21, 4740–4754. doi:10.1111/1462-2920.14816
+22. Ono,Y. et al. (2022) PBSIM3: a simulator for all types of PacBio and ONT long reads. NAR Genomics and Bioinformatics, 4, lqac092. doi:10.1093/nargab/lqac092
+23. Paez-Espino,D. et al. (2016) Uncovering Earth's virome. Nature, 536, 425–430. doi:10.1038/nature19094
+24. Parras-Moltó,M. et al. (2018) Evaluation of bias induced by viral enrichment and random amplification protocols in metagenomic surveys of saliva DNA viruses. Microbiome, 6, 119. doi:10.1186/s40168-018-0507-3
+25. Pinard,R. et al. (2006) Assessment of whole genome amplification-induced bias through high-throughput, massively parallel whole genome sequencing. BMC Genomics, 7, 216. doi:10.1186/1471-2164-7-216
+26. Pride,D.T. et al. (2012) Evidence of a robust resident bacteriophage population revealed through analysis of the human salivary virome. The ISME Journal, 6, 915–926. doi:10.1038/ismej.2011.169
+27. Salter,S.J. et al. (2014) Reagent and laboratory contamination can critically impact sequence-based microbiome analyses. BMC Biology, 12, 87. doi:10.1186/s12915-014-0087-z
+28. Santiago-Rodriguez,T.M. et al. (2015) The human urine virome in association with urinary tract infections. Frontiers in Microbiology, 6, 14. doi:10.3389/fmicb.2015.00014
+29. Sczyrba,A. et al. (2017) Critical Assessment of Metagenome Interpretation—a benchmark of computational metagenomics software. Nature Methods, 14, 1063–1071. doi:10.1038/nmeth.4458
+30. Sender,R. et al. (2016) Revised estimates for the number of human and bacteria cells in the body. PLoS Biology, 14, e1002533. doi:10.1371/journal.pbio.1002533
+31. Shkoporov,A.N. et al. (2019) The human gut virome is highly diverse, stable, and individual specific. Cell Host & Microbe, 26, 527–541. doi:10.1016/j.chom.2019.09.009
+32. Thurber,R.V. et al. (2009) Laboratory procedures to generate viral metagenomes. Nature Protocols, 4, 470–483. doi:10.1038/nprot.2009.10
+33. Trubl,G. et al. (2018) Soil viruses are underexplored players in ecosystem carbon processing. mSystems, 3, e00076-18. doi:10.1128/mSystems.00076-18
+34. Wylie,K.M. et al. (2014) Metagenomic analysis of double-stranded DNA viruses in healthy adults. BMC Biology, 12, 71. doi:10.1186/s12915-014-0071-7
+35. Yilmaz,S. et al. (2010) Multiple displacement amplification compromises quantitative analysis of metagenomes. Nature Methods, 7, 943–944. doi:10.1038/nmeth1210-943
+36. Zhang,T. et al. (2006) RNA viral community in human feces: prevalence of plant pathogenic viruses. PLoS Biology, 4, e3. doi:10.1371/journal.pbio.0040003
+37. Zolfo,M. et al. (2019) Detecting contamination in viromes using ViromeQC. Nature Biotechnology, 37, 1408–1412. doi:10.1038/s41587-019-0334-5
 
 ---
 
